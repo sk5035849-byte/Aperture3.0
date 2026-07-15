@@ -1,0 +1,1601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aperture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg-950:#0c0b0a; --bg-900:#151312; --bg-800:#211e1c; --bg-700:#2e2a27; --bg-600:#433d38;
+    --amber:#e8a33d; --amber-dim:#b8721c; --crimson:#c2493f; --crimson-dim:#8a2e28; --paper:#f2ede4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg-950); color:var(--paper); font-family:'Inter',sans-serif;
+    background-image:
+      radial-gradient(ellipse 800px 500px at 10% -10%, rgba(232,163,61,0.08), transparent),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(194,73,63,0.08), transparent);
+    background-attachment:fixed; min-height:100vh;
+  }
+  .font-display{font-family:'Fraunces',serif;}
+  .font-mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit; cursor:pointer;}
+  input, textarea, select{ font-family:inherit; }
+
+  .setup-wrap{ max-width:640px; margin:0 auto; padding:60px 20px; }
+  .setup-wrap h1{ margin-bottom:4px; }
+  .setup-wrap ol{ line-height:1.9; }
+  .setup-wrap code{ background:var(--bg-800); padding:2px 6px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; }
+  .setup-wrap pre{ background:var(--bg-800); border:1px solid var(--bg-700); border-radius:8px; padding:16px; overflow-x:auto; font-size:12px; line-height:1.6; }
+
+  .auth-wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .auth-box{ width:100%; max-width:360px; }
+  .auth-logo{ display:flex; flex-direction:column; align-items:center; margin-bottom:28px; text-align:center; }
+  .auth-logo h1{ margin:12px 0 4px; font-size:30px; }
+  .auth-logo p{ margin:0; color:rgba(242,237,228,0.5); font-size:14px; }
+  .auth-tabs{ display:flex; background:var(--bg-800); border-radius:6px; padding:4px; margin-bottom:20px; }
+  .auth-tab{ flex:1; padding:9px; font-size:14px; border:none; background:transparent; border-radius:4px; color:rgba(242,237,228,0.6); }
+  .auth-tab.active{ background:var(--amber); color:var(--bg-950); font-weight:600; }
+  .auth-field{ width:100%; background:var(--bg-800); border:1px solid var(--bg-600); border-radius:6px; padding:11px 12px; font-size:14px; color:var(--paper); margin-bottom:10px; }
+  .auth-field::placeholder{ color:rgba(242,237,228,0.3); }
+  .auth-submit{ width:100%; padding:12px; border-radius:6px; border:none; background:linear-gradient(90deg, var(--amber), var(--crimson)); color:var(--bg-950); font-weight:700; font-size:14px; margin-top:4px; }
+  .auth-submit:hover{ opacity:.92; }
+  .auth-submit:disabled{ opacity:.5; }
+  .auth-error{ color:var(--crimson); font-size:13px; margin:0 0 10px; }
+  .auth-hint{ font-size:12px; color:rgba(242,237,228,0.4); text-align:center; margin-top:16px; line-height:1.5; }
+
+  .sidebar{
+    position:fixed; left:0; top:0; height:100%; width:220px; display:flex; flex-direction:column;
+    border-right:1px solid var(--bg-700); background:rgba(21,19,18,0.85); backdrop-filter:blur(6px);
+    padding:24px 16px; z-index:20; overflow-y:auto;
+  }
+  .logo-row{display:flex; align-items:center; gap:8px; padding:0 8px; margin-bottom:32px;}
+  .nav-item{
+    display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:6px; font-size:14px;
+    color:rgba(242,237,228,0.7); background:transparent; border:none; width:100%; text-align:left; margin-bottom:4px;
+    transition: background .15s, color .15s;
+  }
+  .nav-item:hover{ background:var(--bg-800); color:var(--paper); }
+  .nav-item.active{ background:var(--bg-700); color:var(--amber); }
+  .nav-item.admin-nav{ color:var(--crimson); }
+  .upload-btn{
+    display:flex; align-items:center; gap:12px; padding:10px 12px; margin-top:8px; border-radius:6px;
+    background:var(--amber); color:var(--bg-950); font-weight:600; font-size:14px; border:none;
+  }
+  .upload-btn:hover{ background:#f0b158; }
+  .sidebar-footer{ margin-top:auto; }
+  .profile-row{ display:flex; align-items:center; gap:10px; padding:8px; border-radius:6px; }
+  .profile-row:hover{ background:var(--bg-800); }
+  .logout-btn{ width:100%; text-align:left; background:none; border:none; padding:8px; font-size:13px; color:rgba(242,237,228,0.4); }
+  .logout-btn:hover{ color:var(--crimson); }
+  .avatar{
+    border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600;
+    background:linear-gradient(135deg, var(--amber), var(--crimson)); color:var(--bg-950); flex-shrink:0;
+  }
+
+  .topbar{ display:none; }
+  .bottombar{ display:none; }
+
+  main{ margin-left:220px; padding:24px 24px 64px; max-width:640px; }
+  main.wide{ max-width:760px; }
+
+  @media(max-width:768px){
+    .sidebar{ display:none; }
+    .topbar{ display:flex; align-items:center; justify-content:space-between; position:fixed; top:0; left:0; right:0; height:56px; padding:0 16px; background:rgba(21,19,18,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--bg-700); z-index:20; }
+    .bottombar{ display:flex; align-items:center; justify-content:space-around; position:fixed; bottom:0; left:0; right:0; height:64px; background:rgba(21,19,18,0.95); backdrop-filter:blur(6px); border-top:1px solid var(--bg-700); z-index:20; overflow-x:auto; }
+    .bottombar button{ background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10px; color:rgba(242,237,228,0.6); flex-shrink:0; padding:0 8px; }
+    .bottombar button.active{ color:var(--amber); }
+    main{ margin-left:0; padding:70px 14px 80px; max-width:100%; }
+  }
+
+  .card{ background:var(--bg-800); border:1px solid var(--bg-700); border-radius:6px; overflow:hidden; margin-bottom:24px; animation:fadein .25s ease-out; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .card-header{ display:flex; align-items:center; gap:10px; padding:12px 16px; background:none; border:none; width:100%; text-align:left; }
+  .card-header .meta{ min-width:0; }
+  .card-header .meta p{ margin:0; }
+  .name{ font-size:14px; font-weight:500; display:flex; align-items:center; gap:5px; }
+  .handle{ font-size:12px; color:rgba(242,237,228,0.5); }
+  .sprocket{ height:10px; background:var(--bg-700); background-image:radial-gradient(circle, var(--bg-950) 2.5px, transparent 2.6px); background-size:16px 10px; background-position:6px center; }
+  .photo-btn{ display:block; width:100%; border:none; padding:0; background:var(--bg-700); }
+  .photo-btn img{ width:100%; max-height:520px; object-fit:cover; display:block; }
+  .card-body{ padding:12px 16px 16px; }
+  .reactions{ display:flex; align-items:center; gap:16px; margin-bottom:8px; }
+  .react-btn{ display:flex; align-items:center; gap:6px; background:none; border:none; font-size:14px; color:rgba(242,237,228,0.6); }
+  .react-btn.liked{ color:var(--crimson); }
+  .react-btn.disliked{ color:var(--amber); }
+  .react-btn.saved{ color:var(--amber); }
+  .react-btn:hover{ color:var(--paper); }
+  .caption{ font-size:14px; margin:0 0 10px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{ font-size:11px; padding:2px 8px; background:var(--bg-900); border-radius:4px; color:rgba(242,237,228,0.5); }
+  .chip.tag-challenge{ background:rgba(232,163,61,0.15); color:var(--amber); }
+  .verified-badge{ display:inline-flex; color:var(--amber); flex-shrink:0; }
+
+  .explore-filters{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
+  .filter-select{ background:var(--bg-800); border:1px solid var(--bg-600); border-radius:6px; padding:7px 10px; font-size:12px; color:var(--paper); }
+  .filter-check{ display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(242,237,228,0.6); }
+  .grid{ column-count:2; column-gap:8px; }
+  @media(min-width:700px){ .grid{ column-count:4; } }
+  .tile{ position:relative; break-inside:avoid; margin-bottom:8px; border-radius:4px; overflow:hidden; display:block; width:100%; border:none; background:var(--bg-800); }
+  .tile img{ width:100%; display:block; }
+  .tile-overlay{ position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:space-between; padding:8px; background:rgba(12,11,10,0); opacity:0; transition:.15s; font-size:12px; }
+  .tile:hover .tile-overlay{ opacity:1; background:rgba(12,11,10,0.5); }
+  .tile-badge{ position:absolute; top:6px; right:6px; background:rgba(12,11,10,0.75); border-radius:999px; padding:4px; }
+
+  .hero{ position:relative; background:var(--bg-800); border:1px solid var(--bg-700); border-radius:6px; overflow:hidden; margin-bottom:32px; }
+  .hero-badge{ position:absolute; top:12px; left:12px; z-index:2; background:rgba(12,11,10,0.8); backdrop-filter:blur(4px); padding:6px 12px; border-radius:999px; font-size:13px; color:var(--amber); }
+  .hero img{ width:100%; max-height:440px; object-fit:cover; display:block; }
+  .runner-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  @media(min-width:700px){ .runner-grid{ grid-template-columns:repeat(3,1fr); } }
+  .runner{ position:relative; border-radius:4px; overflow:hidden; background:var(--bg-800); border:none; text-align:left; padding:0; }
+  .runner img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; }
+  .rank-badge{ position:absolute; top:8px; left:8px; background:rgba(12,11,10,0.8); padding:2px 8px; border-radius:4px; font-size:12px; }
+  .runner-overlay{ position:absolute; bottom:0; left:0; right:0; padding:8px; display:flex; justify-content:space-between; font-size:12px; background:linear-gradient(to top, rgba(12,11,10,0.9), transparent); }
+
+  .challenge-banner{ background:linear-gradient(135deg, rgba(232,163,61,0.15), rgba(194,73,63,0.1)); border:1px solid var(--bg-700); border-radius:8px; padding:20px; margin-bottom:24px; }
+  .challenge-banner h1{ margin:0 0 6px; }
+  .challenge-banner p{ margin:0 0 12px; font-size:14px; color:rgba(242,237,228,0.75); }
+  .challenge-cta{ background:var(--amber); color:var(--bg-950); font-weight:600; font-size:13px; padding:9px 16px; border:none; border-radius:6px; }
+
+  .profile-card{ background:var(--bg-800); border:1px solid var(--bg-700); border-radius:6px; padding:20px; margin-bottom:20px; display:flex; gap:16px; align-items:flex-start; }
+  .profile-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+  .tab-btn{ background:var(--bg-800); border:1px solid var(--bg-700); color:rgba(242,237,228,0.6); font-size:13px; padding:7px 14px; border-radius:999px; }
+  .tab-btn.active{ background:var(--amber); color:var(--bg-950); border-color:var(--amber); font-weight:600; }
+  .profile-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .profile-tile{ position:relative; aspect-ratio:1; border-radius:4px; overflow:hidden; }
+  .profile-tile img{ width:100%; height:100%; object-fit:cover; }
+  .del-btn{ position:absolute; top:6px; right:6px; background:rgba(12,11,10,0.8); color:var(--crimson); border:none; border-radius:4px; padding:6px; opacity:0; transition:.15s; }
+  .profile-tile:hover .del-btn{ opacity:1; }
+  .edit-link{ background:none; border:none; color:rgba(242,237,228,0.4); font-size:13px; }
+  .edit-link:hover{ color:var(--amber); }
+
+  .admin-row{ display:flex; gap:12px; background:var(--bg-800); border:1px solid var(--bg-700); border-radius:6px; padding:12px; margin-bottom:12px; align-items:center; }
+  .admin-row img{ width:64px; height:64px; object-fit:cover; border-radius:4px; flex-shrink:0; }
+  .admin-info{ flex:1; min-width:0; }
+  .admin-actions{ display:flex; gap:8px; flex-shrink:0; }
+  .btn-danger{ background:var(--crimson); color:var(--paper); border:none; border-radius:5px; padding:7px 12px; font-size:12px; font-weight:600; }
+  .btn-ghost{ background:none; border:1px solid var(--bg-600); color:rgba(242,237,228,0.7); border-radius:5px; padding:7px 12px; font-size:12px; }
+
+  .chat-row{ display:flex; align-items:center; gap:6px; }
+  .chat-row.mine{ justify-content:flex-end; }
+  .chat-bubble{ background:var(--bg-800); border:1px solid var(--bg-700); padding:8px 12px; border-radius:14px; max-width:75%; font-size:14px; word-break:break-word; }
+  .chat-bubble.mine{ background:rgba(232,163,61,0.15); border-color:rgba(232,163,61,0.3); }
+  .msg-delete{ opacity:0; transition:.15s; background:none; border:none; color:rgba(242,237,228,0.4); padding:4px; flex-shrink:0; }
+  .chat-row.mine:hover .msg-delete{ opacity:1; }
+  .msg-delete:hover{ color:var(--crimson); }
+
+  .overlay{ position:fixed; inset:0; background:rgba(12,11,10,0.85); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:16px; z-index:30; }
+  .modal{ background:var(--bg-900); border:1px solid var(--bg-700); border-radius:8px; width:100%; max-width:640px; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; }
+  .modal.small{ max-width:380px; }
+  .modal-header{ display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--bg-700); }
+  .modal-body{ overflow-y:auto; padding:16px 20px; flex:1; }
+  .modal-footer{ display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-top:1px solid var(--bg-700); }
+  .close-x{ background:none; border:none; color:rgba(242,237,228,0.5); font-size:22px; line-height:1; }
+  .close-x:hover{ color:var(--paper); }
+  .secondary-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:2px; }
+  .link-btn{ background:none; border:none; font-size:12px; color:rgba(242,237,228,0.45); }
+  .link-btn:hover{ color:var(--amber); }
+  .link-btn.danger:hover{ color:var(--crimson); }
+
+  .dropzone{ border:2px dashed var(--bg-600); border-radius:6px; padding:32px; text-align:center; cursor:pointer; }
+  .dropzone:hover{ border-color:#5a534c; }
+  .upload-item{ display:flex; gap:12px; background:var(--bg-800); border:1px solid var(--bg-700); border-radius:6px; padding:12px; margin-bottom:12px; }
+  .upload-item img{ width:72px; height:72px; object-fit:cover; border-radius:4px; flex-shrink:0; }
+  .upload-fields{ flex:1; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .upload-fields input{ background:var(--bg-900); border:1px solid var(--bg-600); border-radius:4px; padding:6px 8px; font-size:12px; color:var(--paper); }
+  .upload-fields input.full{ grid-column:1 / -1; font-family:inherit; font-size:13px; }
+  .upload-fields input::placeholder{ color:rgba(242,237,228,0.3); }
+  .remove-x{ background:none; border:none; color:rgba(242,237,228,0.4); align-self:flex-start; font-size:18px; }
+  .remove-x:hover{ color:var(--crimson); }
+  .publish-btn{ background:var(--amber); color:var(--bg-950); font-weight:600; font-size:14px; padding:10px 18px; border:none; border-radius:6px; }
+  .publish-btn:disabled{ opacity:.4; cursor:default; }
+  .attest-box{ display:flex; align-items:flex-start; gap:9px; margin-top:14px; padding:11px; background:var(--bg-900); border:1px solid var(--bg-700); border-radius:6px; font-size:12px; color:rgba(242,237,228,0.7); cursor:pointer; }
+  .challenge-box{ display:flex; align-items:center; gap:9px; margin-top:10px; padding:11px; background:rgba(232,163,61,0.08); border:1px solid var(--bg-700); border-radius:6px; font-size:12px; color:rgba(242,237,228,0.75); cursor:pointer; }
+
+  .empty{ text-align:center; padding:60px 20px; color:rgba(242,237,228,0.5); }
+  .empty h2{ color:var(--paper); }
+
+  .page-title{ font-size:24px; margin:0 0 4px; }
+  .page-sub{ color:rgba(242,237,228,0.5); font-size:14px; margin:0 0 20px; }
+  .section-title{ font-size:18px; margin:24px 0 12px; color:rgba(242,237,228,0.8); }
+
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--bg-800); border:1px solid var(--amber); color:var(--paper); padding:12px 20px; border-radius:8px; font-size:13px; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,0.4); max-width:90vw; text-align:center; }
+
+  ::-webkit-scrollbar{ width:6px; }
+  ::-webkit-scrollbar-thumb{ background:var(--bg-600); border-radius:99px; }
+</style>
+</head>
+<body>
+<div id="app"><div class="setup-wrap"><p>Loading…</p></div></div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+/* =========================================================================
+   SUPABASE CONFIG — paste your own project's values below.
+   Get these from: Supabase dashboard → Project Settings → API.
+   See the setup checklist that appears on screen if this isn't filled in yet.
+   ========================================================================= */
+const SUPABASE_URL = "https://fvkhhchvorrkmagmlkaa.supabase.co
+const SUPABASE_ANON_KEY = "sb_publishable_ABsjroKljiLhqkEneDFQBQ_LthPFlN0";
+
+const CHALLENGE = {
+  tag: 'golden-hour',
+  title: 'This week: Golden Hour',
+  description: 'Submit your best shot taken during golden hour — that magic light right after sunrise or before sunset. Top-liked entry gets featured all week.',
+};
+
+/* ---------------- setup guard ---------------- */
+
+const needsSetup = SUPABASE_URL.startsWith('PASTE_YOUR_') || SUPABASE_ANON_KEY.startsWith('PASTE_YOUR_');
+
+if (needsSetup) {
+  document.getElementById('app').innerHTML = `
+    <div class="setup-wrap">
+      <h1 class="font-display">One quick setup step</h1>
+      <p style="color:rgba(242,237,228,0.6)">This file needs a free Supabase project to store accounts and photos for real, shared, live use. Takes about 10 minutes, no credit card.</p>
+      <ol>
+        <li>Go to <strong>supabase.com</strong> → Start your project → New project (any name, any region) → wait ~2 min for it to provision.</li>
+        <li>Go to <strong>Authentication → Providers → Email</strong> → turn <strong>OFF</strong> "Confirm email" (so sign-up logs people in immediately, matching this app's flow).</li>
+        <li>Go to <strong>SQL Editor</strong> → paste the schema + policies SQL from <code>SUPABASE_SETUP.md</code> → Run.</li>
+        <li>Go to <strong>Storage</strong> → Create a new bucket named exactly <code>photos</code> → toggle <strong>Public bucket</strong> ON.</li>
+        <li>Go to <strong>Storage → Policies</strong> → paste the storage policies SQL from <code>SUPABASE_SETUP.md</code> in the SQL Editor (same place as step 3 works fine too) → Run.</li>
+        <li>Go to <strong>Project Settings → API</strong> → copy the <strong>Project URL</strong> and the <strong>anon public</strong> key.</li>
+        <li>Paste those two values into this file, near the top of the <code>&lt;script&gt;</code> section, replacing the <code>PASTE_YOUR_...</code> placeholders.</li>
+      </ol>
+      <p style="color:rgba(242,237,228,0.6)">Once that's done, reload this page (or re-upload it if it's already live on GitHub Pages) — it'll work for real, for anyone who opens the link.</p>
+    </div>
+  `;
+  throw new Error('Supabase not configured yet — see on-screen setup instructions.');
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ================= app state ================= */
+
+let currentUser = null;      // { id, username, full_name, email, bio, is_admin, saved_photo_ids }
+let authReady = false;
+let authMode = 'signup';
+let authError = '';
+let authBusy = false;
+let route = 'feed';
+let feedMode = 'everyone'; // 'everyone' | 'following'
+let pageData = null;
+let activePhoto = null;
+let activePhotoComments = null;
+let commentDraft = '';
+let uploadOpen = false;
+let uploadItems = [];
+let uploadForChallenge = false;
+let uploadAttested = false;
+let uploadBusy = false;
+let viewedUsername = null;
+let profileEditing = false;
+let profileTab = 'photos';
+let exploreVerifiedOnly = false;
+let exploreCameraFilter = '';
+let licensePhoto = null;
+let toastMessage = '';
+let toastTimer = null;
+let avatarUploading = false;
+let connectionsModal = null; // { userId, tab: 'followers'|'following', loading, users: [] }
+let chatView = 'list'; // 'list' | 'thread'
+let chatPartner = null;
+let chatMessages = null;
+let chatDraft = '';
+let chatChannel = null;
+
+/* ================= helpers ================= */
+
+function timeAgo(iso){
+  const diff = (Date.now() - new Date(iso).getTime())/1000;
+  if(diff < 60) return 'just now';
+  if(diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+function showToast(msg){
+  toastMessage = msg;
+  render();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastMessage = ''; render(); }, 3200);
+}
+
+function friendlyAuthError(err){
+  const msg = (err && err.message) || 'Something went wrong. Please try again.';
+  if(/already registered/i.test(msg)) return 'That email is already registered — try signing in instead.';
+  if(/invalid login credentials/i.test(msg)) return 'Incorrect email or password.';
+  if(/password should be/i.test(msg)) return msg;
+  if(/rate limit/i.test(msg)) return 'Too many attempts — please wait a moment and try again.';
+  if(/email not confirmed/i.test(msg)) return 'Please confirm your email, or ask the site owner to disable "Confirm email" in Supabase Auth settings.';
+  return msg;
+}
+
+function icon(name, cls, filled){
+  const s = 'width="18" height="18" viewBox="0 0 24 24" fill="' + (filled?'currentColor':'none') + '" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"';
+  const paths = {
+    feed:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+    explore:'<circle cx="12" cy="12" r="9"/><path d="M15 9l-4.5 1.5L9 15l4.5-1.5L15 9z"/>',
+    trending:'<path d="M3 17l6-6 4 4 8-8M21 7v6M21 7h-6"/>',
+    challenge:'<path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.4L12 16.8 5.7 21.2 8 13.8 2 9.4h7.6z"/>',
+    chat:'<path d="M21 12c0 4.4-4 8-9 8-1.3 0-2.5-.2-3.6-.7L3 20l1.3-4C3.5 14.8 3 13.5 3 12c0-4.4 4-8 9-8s9 3.6 9 8z"/>',
+    shield:'<path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-4z"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    heart:'<path d="M12 20s-7-4.35-9.5-8.5C.5 8 2 4.5 5.5 4a5 5 0 0 1 6.5 2 5 5 0 0 1 6.5-2c3.5.5 5 4 3 7.5C19 15.65 12 20 12 20z"/>',
+    down:'<path d="M7 14V4M7 14l-3 0a2 2 0 0 1-2-2.5l1.5-6A2 2 0 0 1 5.5 4H16a2 2 0 0 1 2 1.6L19.5 13a2 2 0 0 1-2 2.4H14v3a2 2 0 0 1-3.6 1.2L7 14z"/>',
+    bookmark:'<path d="M6 3h12v18l-6-4-6 4V3z"/>',
+    trash:'<path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"/>',
+  };
+  return `<svg ${s} class="${cls||''}">${paths[name]}</svg>`;
+}
+
+function verifiedBadgeHtml(p){
+  if(!(p.has_camera_exif && p.attested_original)) return '';
+  return `<span class="verified-badge" title="Verified original — camera metadata intact">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2l2.4 2.2 3.2-.6.6 3.2L20.4 8.8 19.8 12l.6 3.2-3.2-.6-.6 3.2L12 22l-2.4-2.2-3.2.6-.6-3.2L3.6 15.2 4.2 12l-.6-3.2 3.2.6.6-3.2L12 2z"/>
+      <path d="M9 12l2 2 4-4" stroke="#0c0b0a" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>`;
+}
+
+function avatarHtml(user, size){
+  if(user.avatar_url){
+    return `<img src="${user.avatar_url}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`;
+  }
+  const initial = (user.full_name || user.username || '?').charAt(0).toUpperCase();
+  return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${size*0.4}px">${initial}</div>`;
+}
+
+/* ================= data layer (Supabase) ================= */
+
+async function loadProfile(uid){
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).single();
+  if(error) { console.error(error); return null; }
+  return data;
+}
+
+async function fetchViewerReactions(uid){
+  const map = new Map();
+  if(!uid) return map;
+  const { data, error } = await supabase.from('reactions').select('photo_id,type').eq('user_id', uid);
+  if(error) { console.error(error); return map; }
+  data.forEach(r => map.set(r.photo_id, r.type));
+  return map;
+}
+
+function attachReactions(photos, reactionMap){
+  return photos.map(p => ({ ...p, viewer_reaction: reactionMap.get(p.id) || null }));
+}
+
+async function fetchFeed(){
+  if(feedMode === 'following' && currentUser){
+    const { data: followRows, error: followError } = await supabase.from('follows').select('following_id').eq('follower_id', currentUser.id);
+    if(followError) return { error: followError.message };
+    const followingIds = followRows.map(r => r.following_id);
+    if(followingIds.length === 0) return { photos: [], emptyFollowing: true };
+    const { data, error } = await supabase.from('photos').select('*').in('author_id', followingIds).order('created_at', { ascending:false }).limit(100);
+    if(error) return { error: error.message };
+    const reactions = await fetchViewerReactions(currentUser.id);
+    return { photos: attachReactions(data, reactions) };
+  }
+  const { data, error } = await supabase.from('photos').select('*').order('created_at', { ascending:false }).limit(100);
+  if(error) return { error: error.message };
+  const reactions = await fetchViewerReactions(currentUser && currentUser.id);
+  return { photos: attachReactions(data, reactions) };
+}
+
+async function fetchExplore(){
+  const { data, error } = await supabase.from('photos').select('*').order('likes_count', { ascending:false }).limit(150);
+  if(error) return { error: error.message };
+  let photos = data;
+  const allCameras = [...new Set(data.map(p => p.camera).filter(Boolean))].sort();
+  if(exploreVerifiedOnly) photos = photos.filter(p => p.has_camera_exif && p.attested_original);
+  if(exploreCameraFilter) photos = photos.filter(p => p.camera === exploreCameraFilter);
+  const reactions = await fetchViewerReactions(currentUser && currentUser.id);
+  return { photos: attachReactions(photos, reactions), allCameras };
+}
+
+async function fetchTrending(){
+  const { data, error } = await supabase.from('photos').select('*').order('likes_count', { ascending:false }).limit(150);
+  if(error) return { error: error.message };
+  const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+  const today = data.filter(p => new Date(p.created_at) >= startOfToday);
+  const reactions = await fetchViewerReactions(currentUser && currentUser.id);
+  return { photos: attachReactions(today, reactions) };
+}
+
+async function fetchChallenge(){
+  const { data, error } = await supabase.from('photos').select('*').eq('challenge_tag', CHALLENGE.tag);
+  if(error) return { error: error.message };
+  const photos = [...data].sort((a,b)=>b.likes_count - a.likes_count);
+  const reactions = await fetchViewerReactions(currentUser && currentUser.id);
+  return { photos: attachReactions(photos, reactions) };
+}
+
+async function fetchProfile(username){
+  const { data: user, error: userError } = await supabase.from('profiles').select('*').eq('username', username).single();
+  if(userError || !user) return { notFound: true };
+  const { data: photosData, error: photosError } = await supabase.from('photos').select('*').eq('author_id', user.id);
+  if(photosError) return { error: photosError.message };
+  const photos = [...photosData].sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
+
+  let savedPhotos = [];
+  const isOwn = currentUser && currentUser.id === user.id;
+  if(isOwn && user.saved_photo_ids && user.saved_photo_ids.length){
+    const { data: saved } = await supabase.from('photos').select('*').in('id', user.saved_photo_ids);
+    savedPhotos = saved || [];
+  }
+
+  const { count: followerCount } = await supabase.from('follows').select('*', { count:'exact', head:true }).eq('following_id', user.id);
+  const { count: followingCount } = await supabase.from('follows').select('*', { count:'exact', head:true }).eq('follower_id', user.id);
+  let isFollowing = false;
+  if(currentUser && !isOwn){
+    const { data: followRow } = await supabase.from('follows').select('follower_id').eq('follower_id', currentUser.id).eq('following_id', user.id).maybeSingle();
+    isFollowing = Boolean(followRow);
+  }
+
+  return { user, photos, savedPhotos, isOwn, followerCount: followerCount||0, followingCount: followingCount||0, isFollowing };
+}
+
+async function fetchAdmin(){
+  const { data: reports, error } = await supabase.from('reports').select('*');
+  if(error) return { error: error.message };
+  const photoIds = [...new Set(reports.map(r => r.photo_id))];
+  if(photoIds.length === 0) return { groups: [] };
+  const { data: photos } = await supabase.from('photos').select('*').in('id', photoIds);
+  const photoMap = new Map((photos||[]).map(p => [p.id, p]));
+  const groups = new Map();
+  reports.forEach(r => {
+    const photo = photoMap.get(r.photo_id);
+    if(!photo) return; // already deleted
+    if(!groups.has(r.photo_id)) groups.set(r.photo_id, { photo, reports: [] });
+    groups.get(r.photo_id).reports.push(r);
+  });
+  return { groups: [...groups.values()] };
+}
+
+async function loadPageData(){
+  pageData = null; render();
+  try {
+    if(route === 'feed') pageData = await fetchFeed();
+    else if(route === 'explore') pageData = await fetchExplore();
+    else if(route === 'trending') pageData = await fetchTrending();
+    else if(route === 'challenge') pageData = await fetchChallenge();
+    else if(route === 'chat') pageData = chatView === 'list' ? await fetchConversations() : null;
+    else if(route === 'profile') pageData = await fetchProfile(viewedUsername || currentUser.username);
+    else if(route === 'admin') pageData = currentUser.is_admin ? await fetchAdmin() : { forbidden: true };
+  } catch(err){
+    console.error(err);
+    pageData = { error: err.message };
+  }
+  render();
+}
+
+/* ================= auth ================= */
+
+async function initAuth(){
+  const { data: { session } } = await supabase.auth.getSession();
+  currentUser = session && session.user ? await loadProfile(session.user.id) : null;
+  authReady = true;
+  render();
+  if(currentUser) loadPageData();
+
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    currentUser = session && session.user ? await loadProfile(session.user.id) : null;
+    render();
+    if(currentUser) loadPageData();
+  });
+}
+
+function setAuthMode(mode){ authMode = mode; authError=''; render(); }
+
+async function handleAuthSubmit(e){
+  e.preventDefault();
+  const f = e.target;
+  authError = '';
+  authBusy = true;
+  render();
+
+  try {
+    if(authMode === 'signup'){
+      const username = f.username.value.trim();
+      const full_name = f.full_name.value.trim();
+      const email = f.email.value.trim();
+      const password = f.password.value;
+
+      if(!/^[a-zA-Z0-9_.]{3,20}$/.test(username)){
+        authError = 'Username must be 3-20 characters: letters, numbers, underscore, or dot.';
+        authBusy = false; render(); return;
+      }
+
+      const { data: clash } = await supabase.from('profiles').select('id').eq('username', username).limit(1);
+      if(clash && clash.length){
+        authError = 'That username is already taken.';
+        authBusy = false; render(); return;
+      }
+
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+      if(signUpError) throw signUpError;
+      if(!signUpData.session){
+        authError = 'Check your email to confirm your account, then sign in. (Or ask the site owner to disable "Confirm email" in Supabase for instant signup.)';
+        authBusy = false; render(); return;
+      }
+
+      const { count } = await supabase.from('profiles').select('*', { count:'exact', head:true });
+      const isFirstUser = !count;
+
+      const profile = { id: signUpData.user.id, username, full_name: full_name || username, bio:'', is_admin: isFirstUser, saved_photo_ids: [] };
+      const { error: insertError } = await supabase.from('profiles').insert(profile);
+      if(insertError) throw insertError;
+
+      currentUser = profile;
+      if(isFirstUser) showToast("You're the first user, so you've been made an admin.");
+    } else {
+      const email = f.email.value.trim();
+      const password = f.password.value;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+      currentUser = await loadProfile(data.user.id);
+    }
+    route = 'feed';
+    authBusy = false;
+    render();
+    loadPageData();
+  } catch(err){
+    authError = friendlyAuthError(err);
+    authBusy = false;
+    render();
+  }
+}
+
+async function logout(){
+  await supabase.auth.signOut();
+  currentUser = null;
+  authMode = 'login';
+  route = 'feed';
+  render();
+}
+
+function renderAuth(){
+  if(!authReady){
+    return `<div class="auth-wrap"><p style="color:rgba(242,237,228,0.5)">Loading…</p></div>`;
+  }
+  return `
+    <div class="auth-wrap">
+      <div class="auth-box">
+        <div class="auth-logo">
+          <svg width="44" height="44" viewBox="0 0 26 26" fill="none">
+            <circle cx="13" cy="13" r="12" stroke="#e8a33d" stroke-width="1.5"/>
+            <path d="M13 4 L13 13 L20 17" stroke="#e8a33d" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="13" cy="13" r="3" fill="#c2493f"/>
+          </svg>
+          <h1 class="font-display">Aperture</h1>
+          <p>Where photographers share their best work.</p>
+        </div>
+
+        <div class="auth-tabs">
+          <button class="auth-tab ${authMode==='signup'?'active':''}" onclick="setAuthMode('signup')">Create account</button>
+          <button class="auth-tab ${authMode==='login'?'active':''}" onclick="setAuthMode('login')">Sign in</button>
+        </div>
+
+        <form onsubmit="handleAuthSubmit(event)">
+          ${authMode==='signup' ? `
+            <input class="auth-field" name="username" placeholder="Username" required />
+            <input class="auth-field" name="full_name" placeholder="Full name (optional)" />
+            <input class="auth-field" name="email" type="email" placeholder="Email" required />
+            <input class="auth-field" name="password" type="password" placeholder="Password (6+ characters)" required />
+          ` : `
+            <input class="auth-field" name="email" type="email" placeholder="Email" required />
+            <input class="auth-field" name="password" type="password" placeholder="Password" required />
+          `}
+          ${authError ? `<p class="auth-error">${authError}</p>` : ''}
+          <button type="submit" class="auth-submit" ${authBusy?'disabled':''}>${authBusy ? 'Please wait…' : (authMode==='signup' ? 'Create account' : 'Sign in')}</button>
+        </form>
+
+        <p class="auth-hint">Real accounts, shared with everyone who opens this page — powered by Supabase. The very first person to sign up becomes an admin automatically.</p>
+      </div>
+    </div>
+  `;
+}
+
+/* ================= reactions / saves ================= */
+
+async function react(id, type){
+  if(!currentUser) return;
+  try {
+    const { error } = await supabase.rpc('toggle_reaction', { p_photo_id: id, p_type: type });
+    if(error) throw error;
+    await loadPageData();
+  } catch(err){
+    console.error(err);
+    showToast('Could not update — please try again.');
+  }
+}
+
+async function toggleSave(id){
+  if(!currentUser) return;
+  const saved = currentUser.saved_photo_ids.includes(id);
+  const newIds = saved ? currentUser.saved_photo_ids.filter(x=>x!==id) : [...currentUser.saved_photo_ids, id];
+  try {
+    const { error } = await supabase.from('profiles').update({ saved_photo_ids: newIds }).eq('id', currentUser.id);
+    if(error) throw error;
+    currentUser.saved_photo_ids = newIds;
+    if(!saved) showToast('Saved to your collection');
+    if(route === 'profile') loadPageData(); else render();
+  } catch(err){
+    console.error(err);
+    showToast('Could not save — please try again.');
+  }
+}
+
+async function toggleFollow(targetUserId){
+  if(!currentUser || currentUser.id === targetUserId) return;
+  try {
+    if(pageData.isFollowing){
+      const { error } = await supabase.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', targetUserId);
+      if(error) throw error;
+    } else {
+      const { error } = await supabase.from('follows').insert({ follower_id: currentUser.id, following_id: targetUserId });
+      if(error) throw error;
+    }
+    loadPageData();
+  } catch(err){
+    console.error(err);
+    showToast('Could not update follow — please try again.');
+  }
+}
+
+/* ================= chat ================= */
+
+async function fetchConversations(){
+  const { data, error } = await supabase.from('messages')
+    .select('*')
+    .or(`sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`)
+    .order('created_at', { ascending:false });
+  if(error) return { error: error.message };
+  const partners = new Map();
+  for(const m of data){
+    const partnerId = m.sender_id === currentUser.id ? m.recipient_id : m.sender_id;
+    if(!partners.has(partnerId)) partners.set(partnerId, m);
+  }
+  const ids = [...partners.keys()];
+  if(ids.length === 0) return { conversations: [] };
+  const { data: profiles } = await supabase.from('profiles').select('*').in('id', ids);
+  const profileMap = new Map((profiles||[]).map(p=>[p.id,p]));
+  const conversations = ids.map(id => ({ partner: profileMap.get(id), lastMessage: partners.get(id) })).filter(c=>c.partner);
+  return { conversations };
+}
+
+function unsubscribeChat(){
+  if(chatChannel){ supabase.removeChannel(chatChannel); chatChannel = null; }
+}
+
+function subscribeChat(){
+  unsubscribeChat();
+  chatChannel = supabase.channel(`chat_${[currentUser.id, chatPartner.id].sort().join('_')}`)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, payload => {
+      const m = payload.new;
+      const involvesUs = (m.sender_id===currentUser.id && m.recipient_id===chatPartner.id) || (m.sender_id===chatPartner.id && m.recipient_id===currentUser.id);
+      if(involvesUs && chatMessages && !chatMessages.find(x=>x.id===m.id)){ chatMessages.push(m); render(); }
+    })
+    .on('postgres_changes', { event:'DELETE', schema:'public', table:'messages' }, payload => {
+      const old = payload.old;
+      if(old && chatMessages){ chatMessages = chatMessages.filter(x=>x.id!==old.id); render(); }
+    })
+    .subscribe();
+}
+
+async function loadChatMessages(){
+  const { data, error } = await supabase.from('messages').select('*')
+    .or(`and(sender_id.eq.${currentUser.id},recipient_id.eq.${chatPartner.id}),and(sender_id.eq.${chatPartner.id},recipient_id.eq.${currentUser.id})`)
+    .order('created_at', { ascending:true });
+  if(error){ console.error(error); chatMessages = []; render(); return; }
+  chatMessages = data;
+  render();
+}
+
+async function openChatWith(userId){
+  unsubscribeChat();
+  route = 'chat';
+  chatView = 'thread';
+  chatMessages = null;
+  chatDraft = '';
+  const { data: partner } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  chatPartner = partner;
+  render();
+  await loadChatMessages();
+  subscribeChat();
+}
+
+function closeChatThread(){
+  unsubscribeChat();
+  chatView = 'list';
+  chatPartner = null;
+  chatMessages = null;
+  loadPageData();
+}
+
+function updateChatDraft(v){ chatDraft = v; }
+
+async function sendChatMessage(){
+  const body = chatDraft.trim();
+  if(!body || !chatPartner) return;
+  chatDraft = '';
+  render();
+  try {
+    const { data, error } = await supabase.from('messages')
+      .insert({ sender_id: currentUser.id, recipient_id: chatPartner.id, body })
+      .select().single();
+    if(error) throw error;
+    if(chatMessages && !chatMessages.find(x=>x.id===data.id)){ chatMessages.push(data); render(); }
+  } catch(err){
+    console.error(err);
+    showToast('Could not send — please try again.');
+  }
+}
+
+async function deleteChatMessage(id){
+  try {
+    const { error } = await supabase.from('messages').delete().eq('id', id);
+    if(error) throw error;
+    if(chatMessages) chatMessages = chatMessages.filter(m=>m.id!==id);
+    render();
+  } catch(err){
+    console.error(err);
+    showToast('Could not delete — please try again.');
+  }
+}
+
+function renderChat(){
+  if(chatView === 'thread') return renderChatThread();
+  if(!pageData) return loadingHtml();
+  if(pageData.error) return `<div class="empty"><p>${pageData.error}</p></div>`;
+  const { conversations } = pageData;
+  return `
+    <h1 class="page-title font-display">Messages</h1>
+    ${conversations.length === 0 ? `<div class="empty"><p>No conversations yet. Visit a profile and hit Message to start one.</p></div>` : conversations.map(c => `
+      <button class="card-header" style="background:var(--bg-800); border:1px solid var(--bg-700); border-radius:6px; margin-bottom:8px;" onclick="openChatWith('${c.partner.id}')">
+        ${avatarHtml(c.partner, 40)}
+        <div class="meta" style="flex:1; text-align:left; min-width:0;">
+          <p class="name">${c.partner.full_name}</p>
+          <p class="handle" style="max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.lastMessage.sender_id===currentUser.id?'You: ':''}${c.lastMessage.body}</p>
+        </div>
+        <span class="font-mono" style="font-size:11px; color:rgba(242,237,228,0.35); flex-shrink:0;">${timeAgo(c.lastMessage.created_at)}</span>
+      </button>
+    `).join('')}
+  `;
+}
+
+function renderChatThread(){
+  if(!chatPartner) return loadingHtml();
+  return `
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <button class="link-btn" onclick="closeChatThread()">← Back</button>
+      <button class="card-header" style="padding:0;" onclick="viewProfile('${chatPartner.username}')">
+        ${avatarHtml(chatPartner, 32)}
+        <div class="meta"><p class="name">${chatPartner.full_name}</p><p class="handle">@${chatPartner.username}</p></div>
+      </button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px;">
+      ${chatMessages === null ? loadingHtml() : ''}
+      ${chatMessages && chatMessages.length === 0 ? `<p style="text-align:center; color:rgba(242,237,228,0.4); padding:20px 0;">Say hello 👋</p>` : ''}
+      ${chatMessages ? chatMessages.map(m => `
+        <div class="chat-row ${m.sender_id===currentUser.id?'mine':''}">
+          ${m.sender_id===currentUser.id ? `<button class="msg-delete" onclick="deleteChatMessage('${m.id}')" title="Delete">${icon('trash')}</button>` : ''}
+          <div class="chat-bubble ${m.sender_id===currentUser.id?'mine':''}">${m.body}</div>
+        </div>
+      `).join('') : ''}
+    </div>
+    <div style="display:flex; gap:8px; position:sticky; bottom:0; background:var(--bg-950); padding:10px 0;">
+      <input class="auth-field" style="margin:0;" placeholder="Type a message…" value="${chatDraft}"
+        oninput="updateChatDraft(this.value)"
+        onkeydown="if(event.key==='Enter'){ sendChatMessage(); }" />
+      <button class="publish-btn" onclick="sendChatMessage()">Send</button>
+    </div>
+  `;
+}
+
+function reactButtons(p){
+  const saved = currentUser && currentUser.saved_photo_ids.includes(p.id);
+  return `
+    <div class="reactions">
+      <button class="react-btn ${p.viewer_reaction==='like'?'liked':''}" onclick="react('${p.id}','like')">
+        ${icon('heart','', p.viewer_reaction==='like')} ${p.likes_count||0}
+      </button>
+      <button class="react-btn ${p.viewer_reaction==='dislike'?'disliked':''}" onclick="react('${p.id}','dislike')">
+        ${icon('down','', p.viewer_reaction==='dislike')} ${p.dislikes_count||0}
+      </button>
+      <button class="react-btn ${saved?'saved':''}" onclick="toggleSave('${p.id}')" title="Save to collection">
+        ${icon('bookmark','', saved)}
+      </button>
+    </div>`;
+}
+
+function chips(p){
+  let out = '<div class="chips">';
+  if(p.location) out += `<span class="chip font-mono">📍 ${p.location}</span>`;
+  if(p.camera) out += `<span class="chip font-mono">${p.camera}</span>`;
+  if(p.lens) out += `<span class="chip font-mono">${p.lens}</span>`;
+  if(p.challenge_tag === CHALLENGE.tag) out += `<span class="chip tag-challenge">🏆 Golden Hour Challenge</span>`;
+  return out + '</div>';
+}
+
+/* ================= feed / explore / trending / challenge ================= */
+
+function loadingHtml(label){ return `<p style="text-align:center; color:rgba(242,237,228,0.4); padding:60px 0;">${label||'Loading…'}</p>`; }
+
+function setFeedMode(mode){ feedMode = mode; loadPageData(); }
+
+function renderFeed(){
+  if(!pageData) return loadingHtml();
+  if(pageData.error) return `<div class="empty"><p>${pageData.error}</p></div>`;
+  const { photos, emptyFollowing } = pageData;
+  const toggle = `
+    <div class="explore-filters" style="margin-bottom:16px;">
+      <button class="tab-btn ${feedMode==='everyone'?'active':''}" onclick="setFeedMode('everyone')">Everyone</button>
+      <button class="tab-btn ${feedMode==='following'?'active':''}" onclick="setFeedMode('following')">Following</button>
+    </div>
+  `;
+  if(emptyFollowing){
+    return toggle + `<div class="empty"><h2 class="font-display">Not following anyone yet</h2><p>Visit a photographer's profile and hit Follow to see their photos here.</p></div>`;
+  }
+  if(photos.length === 0) return toggle + `<div class="empty"><h2 class="font-display">The feed is empty</h2><p>Be the first to publish a photo.</p></div>`;
+  return toggle + photos.map(p => `
+    <article class="card">
+      <button class="card-header" onclick="viewProfile('${p.author_username}')">
+        ${avatarHtml({ full_name: p.author_full_name, username: p.author_username }, 36)}
+        <div class="meta">
+          <p class="name">${p.author_full_name} ${verifiedBadgeHtml(p)}</p>
+          <p class="handle">@${p.author_username} · ${timeAgo(p.created_at)}</p>
+        </div>
+      </button>
+      <div class="sprocket"></div>
+      <button class="photo-btn" onclick="openPhoto('${p.id}')"><img src="${p.image_url}" loading="lazy" /></button>
+      <div class="sprocket"></div>
+      <div class="card-body">
+        ${reactButtons(p)}
+        ${p.caption ? `<p class="caption">${p.caption}</p>` : ''}
+        ${chips(p)}
+      </div>
+    </article>
+  `).join('');
+}
+
+function setExploreVerified(checked){ exploreVerifiedOnly = checked; loadPageData(); }
+function setExploreCamera(val){ exploreCameraFilter = val; loadPageData(); }
+
+function renderExplore(){
+  if(!pageData) return loadingHtml();
+  if(pageData.error) return `<div class="empty"><p>${pageData.error}</p></div>`;
+  const { photos, allCameras } = pageData;
+  return `
+    <h1 class="page-title font-display">Explore</h1>
+    <div class="explore-filters">
+      <label class="filter-check">
+        <input type="checkbox" ${exploreVerifiedOnly?'checked':''} onchange="setExploreVerified(this.checked)" />
+        Verified only
+      </label>
+      <select class="filter-select" onchange="setExploreCamera(this.value)">
+        <option value="">All cameras</option>
+        ${allCameras.map(c => `<option value="${c}" ${exploreCameraFilter===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    ${photos.length === 0 ? `<div class="empty"><p>No photos match these filters yet.</p></div>` : `
+      <div class="grid">
+        ${photos.map(p => `
+          <button class="tile" onclick="openPhoto('${p.id}')">
+            <img src="${p.image_url}" loading="lazy" />
+            ${p.has_camera_exif && p.attested_original ? `<div class="tile-badge">${verifiedBadgeHtml(p)}</div>` : ''}
+            <div class="tile-overlay font-mono">
+              <span>@${p.author_username}</span>
+              <span>${icon('heart')} ${p.likes_count||0}</span>
+            </div>
+          </button>
+        `).join('')}
+      </div>
+    `}
+  `;
+}
+
+function renderTrending(){
+  if(!pageData) return loadingHtml();
+  if(pageData.error) return `<div class="empty"><p>${pageData.error}</p></div>`;
+  const { photos } = pageData;
+  if(photos.length === 0) return `<div class="empty"><h2 class="font-display">No photos yet today</h2><p>Upload one — you could be today's top pick.</p></div>`;
+  const [top, ...rest] = photos;
+  return `
+    <h1 class="page-title font-display">Trending today</h1>
+    <p class="page-sub">Resets at midnight. Ranked by likes on photos posted today.</p>
+    <div class="hero">
+      <div class="hero-badge font-display">#1 TODAY</div>
+      <button class="photo-btn" onclick="openPhoto('${top.id}')"><img src="${top.image_url}" /></button>
+      <div class="card-body">
+        <button class="card-header" style="padding-left:0" onclick="viewProfile('${top.author_username}')">
+          ${avatarHtml({ full_name: top.author_full_name, username: top.author_username }, 36)}
+          <div class="meta"><p class="name">${top.author_full_name} ${verifiedBadgeHtml(top)}</p><p class="handle">@${top.author_username}</p></div>
+        </button>
+        ${top.caption ? `<p class="caption">${top.caption}</p>` : ''}
+        ${reactButtons(top)}
+      </div>
+    </div>
+    ${rest.length ? `
+      <h2 class="section-title font-display">Also trending today</h2>
+      <div class="runner-grid">
+        ${rest.map((p,i) => `
+          <button class="runner" onclick="openPhoto('${p.id}')">
+            <img src="${p.image_url}" />
+            <div class="rank-badge font-mono">#${i+2}</div>
+            <div class="runner-overlay font-mono">
+              <span>@${p.author_username}</span>
+              <span>${icon('heart')} ${p.likes_count||0}</span>
+            </div>
+          </button>
+        `).join('')}
+      </div>
+    ` : ''}
+  `;
+}
+
+function renderChallenge(){
+  if(!pageData) return loadingHtml();
+  if(pageData.error) return `<div class="empty"><p>${pageData.error}</p></div>`;
+  const { photos } = pageData;
+  return `
+    <div class="challenge-banner">
+      <h1 class="font-display">${CHALLENGE.title}</h1>
+      <p>${CHALLENGE.description}</p>
+      <button class="challenge-cta" onclick="openUpload(true)">Submit a photo</button>
+    </div>
+    ${photos.length === 0 ? `<div class="empty"><p>No submissions yet — be the first.</p></div>` : `
+      <h2 class="section-title font-display">Leaderboard</h2>
+      <div class="runner-grid">
+        ${photos.map((p,i) => `
+          <button class="runner" onclick="openPhoto('${p.id}')">
+            <img src="${p.image_url}" />
+            <div class="rank-badge font-mono">#${i+1}</div>
+            <div class="runner-overlay font-mono">
+              <span>@${p.author_username}</span>
+              <span>${icon('heart')} ${p.likes_count||0}</span>
+            </div>
+          </button>
+        `).join('')}
+      </div>
+    `}
+  `;
+}
+
+/* ================= profile ================= */
+
+function viewProfile(username){ unsubscribeChat(); route='profile'; viewedUsername = username; profileEditing=false; profileTab='photos'; activePhoto=null; loadPageData(); }
+function setProfileTab(tab){ profileTab = tab; render(); }
+
+function renderProfile(){
+  if(!pageData) return loadingHtml();
+  if(pageData.notFound) return `<div class="empty"><p>Photographer not found.</p></div>`;
+  if(pageData.error) return `<div class="empty"><p>${pageData.error}</p></div>`;
+  const { user, photos, savedPhotos, isOwn, followerCount, followingCount, isFollowing } = pageData;
+  const stats = { count: photos.length, likes: photos.reduce((a,p)=>a+(p.likes_count||0),0) };
+  const shown = profileTab === 'saved' ? savedPhotos : photos;
+
+  if(profileEditing && isOwn){
+    return `
+      <div class="profile-card" style="display:block;">
+        <form onsubmit="saveProfile(event)">
+          <input class="auth-field" name="full_name" value="${user.full_name}" placeholder="Full name" />
+          <textarea class="auth-field" name="bio" placeholder="Bio" rows="3">${user.bio||''}</textarea>
+          <div style="display:flex; gap:8px;">
+            <button type="submit" class="publish-btn">Save</button>
+            <button type="button" class="edit-link" onclick="profileEditing=false; render()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="profile-card">
+      <div style="position:relative; flex-shrink:0;">
+        ${avatarHtml(user, 72)}
+        ${isOwn ? `
+          <button onclick="document.getElementById('avatarInput').click()" title="Change photo"
+            style="position:absolute; bottom:-2px; right:-2px; width:26px; height:26px; border-radius:50%; background:var(--amber); border:2px solid var(--bg-800); display:flex; align-items:center; justify-content:center; color:var(--bg-950); ${avatarUploading?'opacity:.5;':''}">
+            ${avatarUploading ? '…' : icon('plus','',false)}
+          </button>
+          <input id="avatarInput" type="file" accept="image/*" hidden onchange="if(this.files[0]) uploadAvatar(this.files[0])" />
+        ` : ''}
+      </div>
+      <div style="flex:1">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <h1 class="font-display" style="margin:0; font-size:22px;">${user.full_name}</h1>
+          ${isOwn ? `<button class="edit-link" onclick="profileEditing=true; render()">Edit</button>` : ''}
+          ${!isOwn && currentUser ? `<button class="tab-btn ${isFollowing?'active':''}" style="padding:5px 14px;" onclick="toggleFollow('${user.id}')">${isFollowing?'Following':'Follow'}</button>` : ''}
+          ${!isOwn && currentUser ? `<button class="btn-ghost" onclick="openChatWith('${user.id}')">Message</button>` : ''}
+          ${user.is_admin ? `<span class="chip" style="color:var(--crimson)">Admin</span>` : ''}
+        </div>
+        <p class="handle" style="margin:2px 0 8px;">@${user.username}</p>
+        ${user.bio ? `<p style="font-size:14px; margin:0 0 10px;">${user.bio}</p>` : ''}
+        <div style="display:flex; gap:20px; font-size:14px;">
+          <span><strong>${stats.count}</strong> <span style="color:rgba(242,237,228,0.5)">photos</span></span>
+          <span><strong>${stats.likes}</strong> <span style="color:rgba(242,237,228,0.5)">likes</span></span>
+          <button style="background:none; border:none; padding:0; color:inherit; font-size:14px;" onclick="openConnections('${user.id}','followers')"><strong>${followerCount}</strong> <span style="color:rgba(242,237,228,0.5)">followers</span></button>
+          <button style="background:none; border:none; padding:0; color:inherit; font-size:14px;" onclick="openConnections('${user.id}','following')"><strong>${followingCount}</strong> <span style="color:rgba(242,237,228,0.5)">following</span></button>
+        </div>
+      </div>
+    </div>
+    ${isOwn ? `
+      <div class="profile-tabs">
+        <button class="tab-btn ${profileTab==='photos'?'active':''}" onclick="setProfileTab('photos')">Photos</button>
+        <button class="tab-btn ${profileTab==='saved'?'active':''}" onclick="setProfileTab('saved')">Saved (${savedPhotos.length})</button>
+      </div>
+    ` : ''}
+    ${shown.length === 0 ? `<div class="empty"><p>${profileTab==='saved' ? 'Nothing saved yet.' : 'No photos yet.'}</p></div>` : `
+      <div class="profile-grid">
+        ${shown.map(p => `
+          <div class="profile-tile">
+            <img src="${p.image_url}" onclick="openPhoto('${p.id}')" style="cursor:pointer" />
+            ${p.has_camera_exif && p.attested_original ? `<div style="position:absolute; top:6px; left:6px; background:rgba(12,11,10,0.7); border-radius:999px; padding:4px;">${verifiedBadgeHtml(p)}</div>` : ''}
+            ${isOwn && profileTab==='photos' ? `<button class="del-btn" onclick="deletePhoto('${p.id}')">${icon('trash')}</button>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `}
+  `;
+}
+
+async function saveProfile(e){
+  e.preventDefault();
+  const f = e.target;
+  const full_name = f.full_name.value.trim() || currentUser.username;
+  const bio = f.bio.value.trim();
+  try {
+    const { error } = await supabase.from('profiles').update({ full_name, bio }).eq('id', currentUser.id);
+    if(error) throw error;
+    currentUser.full_name = full_name;
+    currentUser.bio = bio;
+    profileEditing = false;
+    loadPageData();
+  } catch(err){
+    console.error(err);
+    showToast('Could not save profile — please try again.');
+  }
+}
+
+async function uploadAvatar(file){
+  if(!currentUser || !file) return;
+  avatarUploading = true; render();
+  try {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${currentUser.id}/avatar.${ext}`;
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { contentType: file.type, upsert: true });
+    if(uploadError) throw uploadError;
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+    const avatar_url = `${urlData.publicUrl}?t=${Date.now()}`; // cache-bust so the new avatar shows immediately
+    const { error: updateError } = await supabase.from('profiles').update({ avatar_url }).eq('id', currentUser.id);
+    if(updateError) throw updateError;
+    currentUser.avatar_url = avatar_url;
+    avatarUploading = false;
+    showToast('Profile photo updated');
+    loadPageData();
+  } catch(err){
+    console.error(err);
+    avatarUploading = false;
+    showToast('Could not upload photo — please try again.');
+    render();
+  }
+}
+
+/* ================= connections modal ================= */
+
+async function openConnections(userId, tab){
+  connectionsModal = { userId, tab, loading:true, users:[] };
+  render();
+  connectionsModal.users = await fetchConnections(userId, tab);
+  connectionsModal.loading = false;
+  render();
+}
+
+function setConnectionsTab(tab){
+  if(!connectionsModal) return;
+  openConnections(connectionsModal.userId, tab);
+}
+
+function closeConnections(){ connectionsModal = null; render(); }
+
+async function fetchConnections(userId, tab){
+  const col = tab === 'followers' ? 'following_id' : 'follower_id';
+  const wantCol = tab === 'followers' ? 'follower_id' : 'following_id';
+  const { data: rows, error } = await supabase.from('follows').select(wantCol).eq(col, userId);
+  if(error){ console.error(error); return []; }
+  const ids = rows.map(r => r[wantCol]);
+  if(ids.length === 0) return [];
+  const { data: users } = await supabase.from('profiles').select('*').in('id', ids);
+  return users || [];
+}
+
+function connectionsModalHtml(){
+  if(!connectionsModal) return '';
+  const { tab, loading, users } = connectionsModal;
+  return `
+    <div class="overlay" onclick="closeConnections()">
+      <div class="modal small" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="font-display" style="margin:0; font-size:18px;">Connections</h2>
+          <button class="close-x" onclick="closeConnections()">×</button>
+        </div>
+        <div class="profile-tabs" style="padding:0 20px; margin-top:12px;">
+          <button class="tab-btn ${tab==='followers'?'active':''}" onclick="setConnectionsTab('followers')">Followers</button>
+          <button class="tab-btn ${tab==='following'?'active':''}" onclick="setConnectionsTab('following')">Following</button>
+        </div>
+        <div class="modal-body">
+          ${loading ? loadingHtml() : ''}
+          ${!loading && users.length === 0 ? `<p style="text-align:center; color:rgba(242,237,228,0.4); padding:20px 0;">No one here yet.</p>` : ''}
+          ${!loading ? users.map(u => `
+            <button class="card-header" style="padding:8px 0;" onclick="closeConnections(); viewProfile('${u.username}')">
+              ${avatarHtml(u, 36)}
+              <div class="meta"><p class="name">${u.full_name}</p><p class="handle">@${u.username}</p></div>
+            </button>
+          `).join('') : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ================= admin ================= */
+
+function renderAdmin(){
+  if(!currentUser.is_admin) return `<div class="empty"><h2 class="font-display">Admins only</h2></div>`;
+  if(!pageData) return loadingHtml();
+  if(pageData.error) return `<div class="empty"><p>${pageData.error}</p></div>`;
+  const { groups } = pageData;
+  return `
+    <h1 class="page-title font-display">Reported photos</h1>
+    <p class="page-sub">Community reports — review and take action.</p>
+    ${groups.length === 0 ? `<div class="empty"><p>No open reports. All clear.</p></div>` : groups.map(g => `
+      <div class="admin-row">
+        <img src="${g.photo.image_url}" />
+        <div class="admin-info">
+          <p class="name">@${g.photo.author_username} ${verifiedBadgeHtml(g.photo)}</p>
+          <p style="font-size:13px; margin:2px 0 6px; color:rgba(242,237,228,0.8)">${g.photo.caption || '(no caption)'}</p>
+          ${g.reports.map(r => `<p class="font-mono" style="font-size:11px; color:rgba(242,237,228,0.5); margin:2px 0;">⚑ @${r.reporter_username}: ${r.reason || 'No reason given'}</p>`).join('')}
+        </div>
+        <div class="admin-actions">
+          <button class="btn-ghost" onclick="adminDismiss('${g.photo.id}')">Dismiss</button>
+          <button class="btn-danger" onclick="adminDeletePhoto('${g.photo.id}', '${g.photo.image_storage_path}')">Delete photo</button>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+async function adminDismiss(photoId){
+  try {
+    const { error } = await supabase.from('reports').delete().eq('photo_id', photoId);
+    if(error) throw error;
+    showToast('Report dismissed');
+    loadPageData();
+  } catch(err){ console.error(err); showToast('Could not dismiss — please try again.'); }
+}
+
+async function adminDeletePhoto(photoId, storagePath){
+  if(!confirm('Permanently delete this photo?')) return;
+  try {
+    await supabase.from('reports').delete().eq('photo_id', photoId);
+    const { error } = await supabase.from('photos').delete().eq('id', photoId);
+    if(error) throw error;
+    if(storagePath && storagePath !== 'undefined') await supabase.storage.from('photos').remove([storagePath]);
+    showToast('Photo deleted');
+    loadPageData();
+  } catch(err){ console.error(err); showToast('Could not delete — please try again.'); }
+}
+
+/* ================= photo detail modal ================= */
+
+function openPhoto(id){
+  activePhoto = (pageData.photos || []).find(p=>p.id===id) || null;
+  activePhotoComments = null;
+  commentDraft = '';
+  render();
+  if(activePhoto){
+    fetchComments(id).then(comments => { activePhotoComments = comments; render(); });
+  }
+}
+function closeModal(){ activePhoto = null; activePhotoComments = null; render(); }
+
+async function deletePhoto(id){
+  if(!confirm('Delete this photo? This cannot be undone.')) return;
+  try {
+    const photo = pageData.photos.find(p=>p.id===id);
+    const { error } = await supabase.from('photos').delete().eq('id', id);
+    if(error) throw error;
+    if(photo && photo.image_storage_path) await supabase.storage.from('photos').remove([photo.image_storage_path]);
+    activePhoto = null;
+    loadPageData();
+  } catch(err){ console.error(err); showToast('Could not delete — please try again.'); }
+}
+
+async function reportPhoto(id){
+  if(!currentUser) return;
+  const reason = prompt('Why are you reporting this photo? (e.g. suspected AI-generated, stolen work)');
+  if(reason === null) return;
+  try {
+    const { error } = await supabase.from('reports').upsert({
+      photo_id: id, reporter_id: currentUser.id, reporter_username: currentUser.username, reason,
+    }, { onConflict: 'photo_id,reporter_id' });
+    if(error) throw error;
+    showToast('Thanks — this has been reported to the team.');
+  } catch(err){ console.error(err); showToast('Could not report — please try again.'); }
+}
+
+async function fetchComments(photoId){
+  const { data, error } = await supabase.from('comments').select('*').eq('photo_id', photoId).order('created_at', { ascending:true });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+
+function updateCommentDraft(value){ commentDraft = value; }
+
+async function postComment(photoId){
+  if(!currentUser) return;
+  const body = commentDraft.trim();
+  if(!body) return;
+  try {
+    const { error } = await supabase.from('comments').insert({
+      photo_id: photoId, author_id: currentUser.id,
+      author_username: currentUser.username, author_full_name: currentUser.full_name,
+      body,
+    });
+    if(error) throw error;
+    commentDraft = '';
+    activePhotoComments = await fetchComments(photoId);
+    render();
+  } catch(err){
+    console.error(err);
+    showToast('Could not post comment — please try again.');
+  }
+}
+
+async function deleteComment(commentId, photoId){
+  if(!confirm('Delete this comment?')) return;
+  try {
+    const { error } = await supabase.from('comments').delete().eq('id', commentId);
+    if(error) throw error;
+    activePhotoComments = await fetchComments(photoId);
+    render();
+  } catch(err){
+    console.error(err);
+    showToast('Could not delete — please try again.');
+  }
+}
+
+function detailModalHtml(){
+  if(!activePhoto) return '';
+  const p = activePhoto;
+  return `
+    <div class="overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <button class="card-header" style="padding:0;" onclick="closeModal(); viewProfile('${p.author_username}')">
+            ${avatarHtml({ full_name: p.author_full_name, username: p.author_username }, 32)}
+            <div><p class="name">${p.author_full_name} ${verifiedBadgeHtml(p)}</p><p class="handle">@${p.author_username}</p></div>
+          </button>
+          <button class="close-x" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" style="padding:0;">
+          <img src="${p.image_url}" style="width:100%; max-height:60vh; object-fit:contain; background:var(--bg-950); display:block;" />
+          <div style="padding:16px 20px;">
+            ${reactButtons(p)}
+            ${p.caption ? `<p class="caption">${p.caption}</p>` : ''}
+            ${chips(p)}
+            <div class="secondary-actions">
+              <button class="link-btn danger" onclick="reportPhoto('${p.id}')">Report</button>
+              <button class="link-btn" onclick="openLicense('${p.id}')">License this photo · $${p.license_price}</button>
+            </div>
+            ${commentsSectionHtml(p.id)}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function commentsSectionHtml(photoId){
+  const comments = activePhotoComments;
+  return `
+    <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--bg-700);">
+      <p class="section-title" style="margin:0 0 10px; font-size:14px;">Comments</p>
+      ${comments === null ? `<p style="font-size:12px; color:rgba(242,237,228,0.4)">Loading comments…</p>` : ''}
+      ${comments && comments.length === 0 ? `<p style="font-size:12px; color:rgba(242,237,228,0.4)">No comments yet — be the first.</p>` : ''}
+      ${comments && comments.length > 0 ? comments.map(c => `
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          ${avatarHtml({ full_name:c.author_full_name, username:c.author_username }, 26)}
+          <div style="flex:1; min-width:0;">
+            <p style="margin:0; font-size:12px;"><strong>${c.author_full_name}</strong> <span style="color:rgba(242,237,228,0.4)">· ${timeAgo(c.created_at)}</span></p>
+            <p style="margin:2px 0 0; font-size:13px; color:rgba(242,237,228,0.85); word-break:break-word;">${c.body}</p>
+          </div>
+          ${currentUser && (currentUser.id === c.author_id || currentUser.is_admin) ? `<button class="link-btn danger" style="flex-shrink:0;" onclick="deleteComment('${c.id}','${photoId}')">×</button>` : ''}
+        </div>
+      `).join('') : ''}
+      ${currentUser ? `
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <input class="auth-field" style="margin:0;" placeholder="Add a comment…" value="${commentDraft}"
+            oninput="updateCommentDraft(this.value)"
+            onkeydown="if(event.key==='Enter'){ postComment('${photoId}'); }" />
+          <button class="publish-btn" style="padding:0 16px;" onclick="postComment('${photoId}')">Post</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+/* ================= license mockup ================= */
+
+function openLicense(id){ licensePhoto = pageData.photos.find(p=>p.id===id); render(); }
+function closeLicense(){ licensePhoto = null; render(); }
+function purchaseLicense(){
+  showToast('✓ Purchased! (Demo only — no real payment was processed.)');
+  licensePhoto = null;
+}
+
+function licenseModalHtml(){
+  if(!licensePhoto) return '';
+  const p = licensePhoto;
+  return `
+    <div class="overlay" onclick="closeLicense()">
+      <div class="modal small" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="font-display" style="margin:0; font-size:18px;">License this photo</h2>
+          <button class="close-x" onclick="closeLicense()">×</button>
+        </div>
+        <div class="modal-body">
+          <img src="${p.image_url}" style="width:100%; border-radius:6px; margin-bottom:14px;" />
+          <p style="font-size:13px; color:rgba(242,237,228,0.7); margin:0 0 10px;">Standard digital license — personal & commercial use, one project, credit appreciated.</p>
+          <p class="font-display" style="font-size:26px; margin:0 0 16px;">$${p.license_price}</p>
+          <button class="publish-btn" style="width:100%;" onclick="purchaseLicense()">Purchase (demo)</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ================= upload ================= */
+
+function openUpload(forChallenge){
+  uploadOpen = true;
+  uploadItems = [];
+  uploadAttested = false;
+  uploadForChallenge = Boolean(forChallenge);
+  render();
+}
+function closeUpload(){ uploadOpen = false; render(); }
+
+function scanForExif(buffer){
+  const bytes = new Uint8Array(buffer.slice(0, 131072));
+  let str = '';
+  for(let i=0;i<bytes.length;i++) str += String.fromCharCode(bytes[i]);
+  return str.includes('Exif');
+}
+
+async function handleFiles(fileList){
+  const room = 10 - uploadItems.length;
+  const files = Array.from(fileList).filter(f=>f.type.startsWith('image/')).slice(0, room);
+  for(const file of files){
+    const [dataUrl, buffer] = await Promise.all([
+      new Promise((resolve) => { const r = new FileReader(); r.onload = e => resolve(e.target.result); r.readAsDataURL(file); }),
+      file.arrayBuffer(),
+    ]);
+    uploadItems.push({ file, previewUrl: dataUrl, caption:'', location:'', camera:'', lens:'', hasCameraExif: scanForExif(buffer) });
+    render();
+  }
+}
+
+function updateUploadField(i, field, value){ uploadItems[i][field] = value; }
+function removeUploadItem(i){ uploadItems.splice(i,1); render(); }
+function setUploadAttested(checked){ uploadAttested = checked; render(); }
+function setUploadForChallenge(checked){ uploadForChallenge = checked; }
+
+async function publish(){
+  if(uploadItems.length === 0) return;
+  if(!uploadAttested){ showToast('Please confirm the photos are your own original work first.'); return; }
+  uploadBusy = true; render();
+
+  try {
+    for(const it of uploadItems){
+      const ext = (it.file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${currentUser.id}/${crypto.randomUUID()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage.from('photos').upload(path, it.file, { contentType: it.file.type });
+      if(uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path);
+
+      const { error: insertError } = await supabase.from('photos').insert({
+        author_id: currentUser.id,
+        author_username: currentUser.username,
+        author_full_name: currentUser.full_name,
+        image_url: urlData.publicUrl,
+        image_storage_path: path,
+        caption: it.caption, location: it.location, camera: it.camera, lens: it.lens,
+        has_camera_exif: it.hasCameraExif,
+        attested_original: true,
+        challenge_tag: uploadForChallenge ? CHALLENGE.tag : null,
+        license_price: 20 + Math.floor(Math.random()*40),
+      });
+      if(insertError) throw insertError;
+    }
+    const wentToChallenge = uploadForChallenge;
+    uploadBusy = false;
+    closeUpload();
+    route = wentToChallenge ? 'challenge' : 'feed';
+    loadPageData();
+  } catch(err){
+    console.error(err);
+    uploadBusy = false;
+    showToast('Upload failed — please try again.');
+    render();
+  }
+}
+
+function uploadModalHtml(){
+  if(!uploadOpen) return '';
+  return `
+    <div class="overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="font-display" style="margin:0; font-size:20px;">Upload photos</h2>
+          <button class="close-x" onclick="closeUpload()">×</button>
+        </div>
+        <div class="modal-body">
+          ${uploadItems.length < 10 ? `
+            <div class="dropzone" onclick="document.getElementById('fileInput').click()"
+                 ondragover="event.preventDefault()" ondrop="event.preventDefault(); handleFiles(event.dataTransfer.files)">
+              <p style="margin:0 0 4px; font-size:14px;">Drag & drop photos here — or click to browse</p>
+              <p style="margin:0; font-size:12px; color:rgba(242,237,228,0.4)">Up to 10 at a time · JPG, PNG, WEBP, GIF</p>
+              <input id="fileInput" type="file" accept="image/*" multiple hidden onchange="handleFiles(this.files)" />
+            </div>
+          ` : ''}
+          <div style="margin-top:16px;">
+            ${uploadItems.map((it,i) => `
+              <div class="upload-item">
+                <img src="${it.previewUrl}" />
+                <div class="upload-fields">
+                  <input class="full" placeholder="Caption" value="${it.caption}" oninput="updateUploadField(${i},'caption',this.value)" />
+                  <input placeholder="Location" value="${it.location}" oninput="updateUploadField(${i},'location',this.value)" />
+                  <input placeholder="Camera" value="${it.camera}" oninput="updateUploadField(${i},'camera',this.value)" />
+                  <input class="full" placeholder="Lens" value="${it.lens}" oninput="updateUploadField(${i},'lens',this.value)" />
+                  <p class="font-mono" style="grid-column:1/-1; font-size:10px; margin:2px 0 0; color:${it.hasCameraExif?'var(--amber)':'rgba(242,237,228,0.35)'}">
+                    ${it.hasCameraExif ? '✓ Camera metadata detected — eligible for Verified badge' : 'No camera metadata found'}
+                  </p>
+                </div>
+                <button class="remove-x" onclick="removeUploadItem(${i})">×</button>
+              </div>
+            `).join('')}
+          </div>
+
+          ${uploadItems.length > 0 ? `
+            <label class="attest-box">
+              <input type="checkbox" ${uploadAttested?'checked':''} onchange="setUploadAttested(this.checked)" style="margin-top:1px;" />
+              <span>I confirm these are my own original photographs — not AI-generated, and not someone else's work. Photos with intact camera metadata get a <strong style="color:var(--paper)">Verified Original</strong> badge automatically.</span>
+            </label>
+            <label class="challenge-box">
+              <input type="checkbox" ${uploadForChallenge?'checked':''} onchange="setUploadForChallenge(this.checked)" />
+              <span>Submit to <strong style="color:var(--amber)">${CHALLENGE.title}</strong></span>
+            </label>
+          ` : ''}
+        </div>
+        <div class="modal-footer">
+          <span class="font-mono" style="font-size:12px; color:rgba(242,237,228,0.4)">${uploadItems.length}/10 selected</span>
+          <button class="publish-btn" ${uploadItems.length===0 || !uploadAttested || uploadBusy ?'disabled':''} onclick="publish()">${uploadBusy ? 'Publishing…' : `Publish (${uploadItems.length})`}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ================= shell + router ================= */
+
+function go(r){
+  if(r !== 'chat') unsubscribeChat();
+  if(r === 'chat') chatView = 'list';
+  route = r; activePhoto = null; if(r!=='profile') viewedUsername = null; loadPageData();
+}
+
+function render(){
+  if(!authReady || !currentUser){
+    document.getElementById('app').innerHTML = renderAuth();
+    return;
+  }
+
+  const pages = { feed: renderFeed, explore: renderExplore, trending: renderTrending, challenge: renderChallenge, chat: renderChat, profile: renderProfile, admin: renderAdmin };
+
+  document.getElementById('app').innerHTML = `
+    <aside class="sidebar">
+      <div class="logo-row">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="13" r="12" stroke="#e8a33d" stroke-width="1.5"/>
+          <path d="M13 4 L13 13 L20 17" stroke="#e8a33d" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="13" cy="13" r="3" fill="#c2493f"/>
+        </svg>
+        <span class="font-display" style="font-size:20px;">Aperture</span>
+      </div>
+      <button class="nav-item ${route==='feed'?'active':''}" onclick="go('feed')">${icon('feed')} Feed</button>
+      <button class="nav-item ${route==='explore'?'active':''}" onclick="go('explore')">${icon('explore')} Explore</button>
+      <button class="nav-item ${route==='trending'?'active':''}" onclick="go('trending')">${icon('trending')} Trending</button>
+      <button class="nav-item ${route==='challenge'?'active':''}" onclick="go('challenge')">${icon('challenge')} Challenge</button>
+      <button class="nav-item ${route==='chat'?'active':''}" onclick="go('chat')">${icon('chat')} Messages</button>
+      ${currentUser.is_admin ? `<button class="nav-item admin-nav ${route==='admin'?'active':''}" onclick="go('admin')">${icon('shield')} Admin</button>` : ''}
+      <button class="upload-btn" onclick="openUpload(false)">${icon('plus')} Upload</button>
+      <div class="sidebar-footer">
+        <button class="profile-row" style="width:100%; border:none; background:none; text-align:left;" onclick="viewProfile('${currentUser.username}')">
+          ${avatarHtml(currentUser, 32)}
+          <div class="meta">
+            <p class="name">${currentUser.full_name}</p>
+            <p class="handle">@${currentUser.username}</p>
+          </div>
+        </button>
+        <button class="logout-btn" onclick="logout()">Sign out</button>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <div class="logo-row" style="margin:0;">
+        <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="13" r="12" stroke="#e8a33d" stroke-width="1.5"/>
+          <path d="M13 4 L13 13 L20 17" stroke="#e8a33d" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="13" cy="13" r="3" fill="#c2493f"/>
+        </svg>
+        <span class="font-display" style="font-size:17px;">Aperture</span>
+      </div>
+      <button class="upload-btn" style="margin:0; padding:8px;" onclick="openUpload(false)">${icon('plus')}</button>
+    </header>
+
+    <main class="${route==='profile'?'':'wide'}">
+      ${pages[route]()}
+    </main>
+
+    <nav class="bottombar">
+      <button class="${route==='feed'?'active':''}" onclick="go('feed')">${icon('feed')}Feed</button>
+      <button class="${route==='explore'?'active':''}" onclick="go('explore')">${icon('explore')}Explore</button>
+      <button class="${route==='trending'?'active':''}" onclick="go('trending')">${icon('trending')}Trending</button>
+      <button class="${route==='challenge'?'active':''}" onclick="go('challenge')">${icon('challenge')}Challenge</button>
+      <button class="${route==='chat'?'active':''}" onclick="go('chat')">${icon('chat')}Messages</button>
+      ${currentUser.is_admin ? `<button class="${route==='admin'?'active':''}" onclick="go('admin')">${icon('shield')}Admin</button>` : ''}
+      <button class="${route==='profile'?'active':''}" onclick="viewProfile('${currentUser.username}')">
+        ${avatarHtml(currentUser, 20)}Profile
+      </button>
+    </nav>
+
+    ${detailModalHtml()}
+    ${uploadModalHtml()}
+    ${licenseModalHtml()}
+    ${connectionsModalHtml()}
+    ${toastMessage ? `<div class="toast">${toastMessage}</div>` : ''}
+  `;
+}
+
+Object.assign(window, {
+    setAuthMode, handleSubmit, logout, go, react, toggleSave, toggleFollow, viewProfile, setProfile,
+    saveProfile, uploadAvatar, openConnections, setConnectionsTab, closeConnections,
+    openPhoto, closePhoto, deletePhoto, reportPhoto, openLicense, closeLicense,
+    purchaseLicense, openUpload, closeUpload, handleFiles, updateUploadField, removeUploadItem,
+    setupLoadAtested, setupLoadForChallenge, publish, setExploreViewFiled, setExploreViewCamera, setFeedback,
+    adminDismiss, adminDeletePhoto, updateCommentDraft, postComment, deleteComment,
+    openChatWith, closeChatThread, updateChatDraft, sendChatMessage, deleteChatMessage,
+  });
+
+  const SUPABASE_URL = "https://zxywutvqsr.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_ABsjroK1jlhqAEne0fQBQ_LthPF1Nef";
+
+  initAuth({
+    supabaseUrl: SUPABASE_URL,
+    supabaseKey: SUPABASE_ANON_KEY
+  });
+</script>
+</body>
+</html>
