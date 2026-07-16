@@ -1589,10 +1589,10 @@ Object.assign(window, {
     openChatWith, closeChatThread, updateChatDraft, sendChatMessage, deleteChatMessage,
   });
 
-  const SUPABASE_URL = "https://supabase.co";
-const SUPABASE_ANON_KEY = "sb.publishable.AbSjrok1j1LhqkEneDfoQQ_tHPFIN0";
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 initAuth({
-    supabaseUrl: SUPABASE_URL,
-    supabaseKey: SUPABASE_ANON_KEY
+  supabaseUrl: SUPABASE_URL,
+  supabaseKey: SUPABASE_ANON_KEY,
 });
